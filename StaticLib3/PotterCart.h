@@ -2,6 +2,7 @@
 #include <map>
 
 typedef std::map<char, int> VolumeCount;
+
 class ShoppingItem
 {
 public:
@@ -12,14 +13,16 @@ public:
 class PotterCart
 {
 public:
-	PotterCart();
-	~PotterCart();
+	PotterCart() = default;
+	~PotterCart() = default;
 	void AddToCart(const ShoppingItem& items);
-	int estimateSpecifiedPackageMaxNumber(int packageSize);
+	int GetTotal();
+
+private:
+	int estimateSpecifiedPackageMaxNumber(const int packageSize);
 	double calculateTotalPrice(int totalBooks, int numOfPackage5, int numOfPackage4, int numOfPackage3, int numOfPackage2);
 	int calculateTotalBooks();
 	int calculateTotalBooksByAllPackages(int numOfPackage5, int numOfPackage4, int numOfPackage3, int numOfPackage2);
-	int GetTotal();
+
 	::ShoppingItem m_shoppingItem;
 };
-

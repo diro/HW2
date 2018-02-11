@@ -2,72 +2,62 @@
 #include "PotterCart.h"
 #include <climits>
 
-
-PotterCart::PotterCart()
-{
-}
-
-
-PotterCart::~PotterCart()
-{
-}
-
 void PotterCart::AddToCart(const ShoppingItem& items)
 {
 	m_shoppingItem = items;
 }
 
-int PotterCart::estimateSpecifiedPackageMaxNumber(int packageSize)
+int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize)
 {
-	int totalBooks = 0;
-	for (const auto& pair : m_shoppingItem.episodeCountList)
-	{
-		totalBooks += pair.second;
-	}
+	if (packageSize > m_shoppingItem.episodeCountList.size())
+		return 0;
 
-	auto tmpShoppingItem = m_shoppingItem;
+	int totalBooks = calculateTotalBooks();
 
-	int packageAmount = 0;
-	
+	auto estimatedShoppingItem = m_shoppingItem;
+
+	int packageNumber = 0;
+
 	for (int i = 0; i < totalBooks; i++)
 	{
-		int gotCount = 0;
-		int allowedEmpty = 5 - packageSize;
-		for (auto& pair : tmpShoppingItem.episodeCountList)
+		int currentPackageSize = 0;
+		int remainingEmptyNumber = m_shoppingItem.episodeCountList.size() - packageSize;
+		
+		for (auto& pair : estimatedShoppingItem.episodeCountList)
 		{
-			if (pair.second-- <= 0)
+			pair.second--;
+			if (pair.second < 0)
 			{
-				if (allowedEmpty == 0)
+				if (remainingEmptyNumber == 0)
 				{
-					return packageAmount;
+					return packageNumber;
 				}
-				else
-				{
-					allowedEmpty--;
-				}
+				remainingEmptyNumber--;
 			}
 			else
 			{
-				gotCount++;
+				currentPackageSize++;
 			}
 
-			if (gotCount == packageSize)
+			if (currentPackageSize == packageSize)
 			{
-				packageAmount++;
+				packageNumber++;
 				break;
 			}
 		}
 	}
-	return packageAmount;
+
+	return packageNumber;
 }
 
 
 double PotterCart::calculateTotalPrice(int totalBooks, int numOfPackage5, int numOfPackage4, int numOfPackage3,
-	int numOfPackage2)
+                                       int numOfPackage2)
 {
-	int numOfPackage1 = totalBooks - calculateTotalBooksByAllPackages(numOfPackage5, numOfPackage4, numOfPackage3,  numOfPackage2);
-	
-	return	numOfPackage5 * 500 * 0.75 +
+	int numOfPackage1 = totalBooks - calculateTotalBooksByAllPackages(numOfPackage5, numOfPackage4, numOfPackage3,
+	                                                                  numOfPackage2);
+
+	return numOfPackage5 * 500 * 0.75 +
 		numOfPackage4 * 400 * 0.8 +
 		numOfPackage3 * 300 * 0.9 +
 		numOfPackage2 * 200 * 0.95 +
@@ -77,7 +67,7 @@ double PotterCart::calculateTotalPrice(int totalBooks, int numOfPackage5, int nu
 int PotterCart::calculateTotalBooks()
 {
 	int totalBooks = 0;
-	
+
 	for (const auto& pair : m_shoppingItem.episodeCountList)
 	{
 		totalBooks += pair.second;
@@ -87,7 +77,7 @@ int PotterCart::calculateTotalBooks()
 }
 
 int PotterCart::calculateTotalBooksByAllPackages(int numOfPackage5, int numOfPackage4, int numOfPackage3,
-	int numOfPackage2)
+                                                 int numOfPackage2)
 {
 	return numOfPackage5 * 5 + numOfPackage4 * 4 + numOfPackage3 * 3 + numOfPackage2 * 2;
 }
@@ -112,7 +102,8 @@ int PotterCart::GetTotal()
 				{
 					if (calculateTotalBooksByAllPackages(numOfPackage5, numOfPackage4, numOfPackage3, numOfPackage2) <= totalBooks)
 					{
-						const int currentPrice = calculateTotalPrice(totalBooks, numOfPackage5, numOfPackage4, numOfPackage3, numOfPackage2);
+						const int currentPrice = calculateTotalPrice(totalBooks, numOfPackage5, numOfPackage4, numOfPackage3,
+						                                             numOfPackage2);
 						if (currentPrice < lowestPrice)
 						{
 							lowestPrice = currentPrice;
@@ -125,4 +116,3 @@ int PotterCart::GetTotal()
 
 	return lowestPrice;
 }
-
