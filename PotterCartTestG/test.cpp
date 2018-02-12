@@ -1,5 +1,6 @@
 #include "pch.h"
-#include "../StaticLib3/PotterCart.h"
+#include "../PotterCart/PotterCart.h"
+
 
 TEST(PotterCart, buy_1_vol1_total_should_be_100dollars)
 {

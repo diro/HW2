@@ -48,7 +48,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StaticLib3\StaticLib3.vcxproj">
+    <ProjectReference Include="..\PotterCart\PotterCart.vcxproj">
       <Project>{32fbdaef-13a8-4fbc-9be8-044ce987d13b}</Project>
     </ProjectReference>
   </ItemGroup>
