@@ -16,15 +16,19 @@ public:
 	PotterCart() = default;
 	~PotterCart() = default;
 	void AddToCart(const ShoppingItem& items);
-	bool removePackageInShoppingItem(const int packageSize, ShoppingItem& shoppingItem);
-	bool isValidPackage(PackageNumberInfo packageNumberInfo);
 	int GetTotal();
 
 private:
-	int estimateSpecifiedPackageMaxNumber(const int packageSize);
+	void estimateCheapestPackagePlan(ShoppingItem items, int packageSize, PackageNumberInfo packageNumberInfo);
+
+	bool removePackageInShoppingItem(const int packageSize, ShoppingItem& shoppingItem);
+	int estimateSpecifiedPackageMaxNumber(const int packageSize, ShoppingItem shoppingItem);
+	
 	double calculateTotalPrice(int totalBooks, PackageNumberInfo packageNumberInfo);
-	int calculateTotalBooksInCart();
+	int calculateTotalBooksInCart(const ShoppingItem& shoppingItem);
 	int calculateTotalPackageBooks(PackageNumberInfo packageNumberInfo);
 
+	
 	::ShoppingItem m_shoppingItem;
+	int m_lowestPrice = INT_MAX;
 };

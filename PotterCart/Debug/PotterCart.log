@@ -1,0 +1,4 @@
+﻿  PotterCart.cpp
+c:\users\diro fan\documents\visual studio 2017\projects\staticlib3\pottercart\pottercart.cpp(39): warning C4018: '>': signed/unsigned mismatch
+c:\users\diro fan\documents\visual studio 2017\projects\staticlib3\pottercart\pottercart.cpp(119): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  PotterCart.vcxproj -> C:\Users\Diro Fan\Documents\Visual Studio 2017\Projects\StaticLib3\Debug\PotterCart.lib

@@ -5,6 +5,10 @@
 void PotterCart::AddToCart(const ShoppingItem& items)
 {
 	m_shoppingItem = items;
+	m_lowestPrice = INT_MAX;
+
+	PackageNumberInfo packageNumberInfo;
+	estimateCheapestPackagePlan(m_shoppingItem, 5, packageNumberInfo);
 }
 
 bool PotterCart::removePackageInShoppingItem(const int packageSize, ShoppingItem& shoppingItem)
@@ -29,36 +33,22 @@ bool PotterCart::removePackageInShoppingItem(const int packageSize, ShoppingItem
 	return false;
 }
 
-bool PotterCart::isValidPackage(PackageNumberInfo packageNumberInfo)
-{
-	auto shoppingItem = m_shoppingItem;
-	for (const auto& pair : packageNumberInfo)
-	{
-		for (int i = 0; i < pair.second; i++)
-		{
-			if (!removePackageInShoppingItem(pair.first, shoppingItem))
-			{
-				return false;
-			}
-		}
-	}
-}
 
-int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize)
+int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize, ShoppingItem shoppingItem)
 {
 	if (packageSize > m_shoppingItem.episodeCountList.size())
 		return 0;
 
-	int totalBooks = calculateTotalBooksInCart();
+	int totalBooks = calculateTotalBooksInCart(shoppingItem);
 
-	auto estimatedShoppingItem = m_shoppingItem;
+	auto estimatedShoppingItem = shoppingItem;
 
 	int packageNumber = 0;
 
 	for (int i = 0; i < totalBooks; i++)
 	{
 		int currentPackageSize = 0;
-		int remainingEmptyNumber = m_shoppingItem.episodeCountList.size() - packageSize;
+		int remainingEmptyNumber = estimatedShoppingItem.episodeCountList.size() - packageSize;
 
 		for (auto& pair : estimatedShoppingItem.episodeCountList)
 		{
@@ -99,11 +89,11 @@ double PotterCart::calculateTotalPrice(int totalBooks, PackageNumberInfo package
 		(totalBooks - calculateTotalPackageBooks(packageNumberInfo)) * 100;
 }
 
-int PotterCart::calculateTotalBooksInCart()
+int PotterCart::calculateTotalBooksInCart(const ShoppingItem &shoppingItem)
 {
 	int totalBooks = 0;
 
-	for (const auto& pair : m_shoppingItem.episodeCountList)
+	for (const auto& pair : shoppingItem.episodeCountList)
 	{
 		totalBooks += pair.second;
 	}
@@ -122,46 +112,33 @@ int PotterCart::calculateTotalPackageBooks(PackageNumberInfo packageNumberInfo)
 	return totalBooks;
 }
 
-int PotterCart::GetTotal()
+void PotterCart::estimateCheapestPackagePlan(ShoppingItem items, int packageSize, PackageNumberInfo packageNumberInfo)
 {
-	int totalBooks = calculateTotalBooksInCart();
-
-	int maxNumberOfPackage5 = estimateSpecifiedPackageMaxNumber(5);
-	int maxNumberOfPackage4 = estimateSpecifiedPackageMaxNumber(4);
-	int maxNumberOfPackage3 = estimateSpecifiedPackageMaxNumber(3);
-	int maxNumberOfPackage2 = estimateSpecifiedPackageMaxNumber(2);
-
-	int lowestPrice = INT_MAX;
-
-	for (int numOfPackage5 = 0; numOfPackage5 <= maxNumberOfPackage5; numOfPackage5++)
+	if (packageSize == 1)
 	{
-		for (int numOfPackage4 = 0; numOfPackage4 <= maxNumberOfPackage4; numOfPackage4++)
+		int price = calculateTotalPrice(calculateTotalBooksInCart(m_shoppingItem), packageNumberInfo);
+		if (price < m_lowestPrice)
 		{
-			for (int numOfPackage3 = 0; numOfPackage3 <= maxNumberOfPackage3; numOfPackage3++)
-			{
-				for (int numOfPackage2 = 0; numOfPackage2 <= maxNumberOfPackage2; numOfPackage2++)
-				{
-					PackageNumberInfo packageNumberInfo;
-					packageNumberInfo.insert(std::make_pair(5, numOfPackage5));
-					packageNumberInfo.insert(std::make_pair(4, numOfPackage4));
-					packageNumberInfo.insert(std::make_pair(3, numOfPackage3));
-					packageNumberInfo.insert(std::make_pair(2, numOfPackage2));
-					
-					if (calculateTotalPackageBooks(packageNumberInfo) > totalBooks)
-						continue;
-					
-					if (!isValidPackage(packageNumberInfo))
-						continue;
-
-					const int currentPrice = calculateTotalPrice(totalBooks, packageNumberInfo);
-					if (currentPrice < lowestPrice)
-					{
-						lowestPrice = currentPrice;
-					}
-				}
-			}
+			m_lowestPrice = price;
 		}
+		return;
 	}
 
-	return lowestPrice;
+	int maxNumberOfPackage = estimateSpecifiedPackageMaxNumber(packageSize, items);
+	for (int numOfPackage = 0; numOfPackage <= maxNumberOfPackage; numOfPackage++)
+	{
+		PackageNumberInfo info = packageNumberInfo;
+		ShoppingItem remainingShoppingItem = items;
+		for (int i = 0; i < numOfPackage; i++)
+		{
+			removePackageInShoppingItem(packageSize, remainingShoppingItem);
+		}
+		info.insert(std::make_pair(packageSize, numOfPackage));
+		estimateCheapestPackagePlan(remainingShoppingItem, packageSize - 1, info);
+	}
+}
+
+int PotterCart::GetTotal()
+{
+	return m_lowestPrice;
 }
