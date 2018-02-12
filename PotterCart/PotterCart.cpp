@@ -89,7 +89,7 @@ double PotterCart::calculateTotalPrice(int totalBooks, PackageNumberInfo package
 		(totalBooks - calculateTotalPackageBooks(packageNumberInfo)) * 100;
 }
 
-int PotterCart::calculateTotalBooksInCart(const ShoppingItem &shoppingItem)
+int PotterCart::calculateTotalBooksInCart(const ShoppingItem& shoppingItem)
 {
 	int totalBooks = 0;
 
