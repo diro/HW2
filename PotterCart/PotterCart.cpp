@@ -7,12 +7,49 @@ void PotterCart::AddToCart(const ShoppingItem& items)
 	m_shoppingItem = items;
 }
 
+bool PotterCart::removePackageInShoppingItem(const int packageSize, ShoppingItem& shoppingItem)
+{
+	int removeCount = 0;
+	auto tmpShoppingItem = shoppingItem;
+	for (auto& pair : tmpShoppingItem.episodeCountList)
+	{
+		if (pair.second >= 1)
+		{
+			pair.second--;
+			removeCount++;
+		}
+
+		if (removeCount == packageSize)
+		{
+			shoppingItem = tmpShoppingItem;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool PotterCart::isValidPackage(PackageNumberInfo packageNumberInfo)
+{
+	auto shoppingItem = m_shoppingItem;
+	for (const auto& pair : packageNumberInfo)
+	{
+		for (int i = 0; i < pair.second; i++)
+		{
+			if (!removePackageInShoppingItem(pair.first, shoppingItem))
+			{
+				return false;
+			}
+		}
+	}
+}
+
 int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize)
 {
 	if (packageSize > m_shoppingItem.episodeCountList.size())
 		return 0;
 
-	int totalBooks = calculateTotalBooks();
+	int totalBooks = calculateTotalBooksInCart();
 
 	auto estimatedShoppingItem = m_shoppingItem;
 
@@ -22,7 +59,7 @@ int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize)
 	{
 		int currentPackageSize = 0;
 		int remainingEmptyNumber = m_shoppingItem.episodeCountList.size() - packageSize;
-		
+
 		for (auto& pair : estimatedShoppingItem.episodeCountList)
 		{
 			pair.second--;
@@ -51,20 +88,18 @@ int PotterCart::estimateSpecifiedPackageMaxNumber(const int packageSize)
 }
 
 
-double PotterCart::calculateTotalPrice(int totalBooks, int numOfPackage5, int numOfPackage4, int numOfPackage3,
-                                       int numOfPackage2)
+double PotterCart::calculateTotalPrice(int totalBooks, PackageNumberInfo packageNumberInfo)
 {
-	int numOfPackage1 = totalBooks - calculateTotalBooksByAllPackages(numOfPackage5, numOfPackage4, numOfPackage3,
-	                                                                  numOfPackage2);
+	int numOfPackage1 = totalBooks - calculateTotalPackageBooks(packageNumberInfo);
 
-	return numOfPackage5 * 500 * 0.75 +
-		numOfPackage4 * 400 * 0.8 +
-		numOfPackage3 * 300 * 0.9 +
-		numOfPackage2 * 200 * 0.95 +
-		numOfPackage1 * 100;
+	return packageNumberInfo.at(5) * 500 * 0.75 +
+		packageNumberInfo.at(4) * 400 * 0.8 +
+		packageNumberInfo.at(3) * 300 * 0.9 +
+		packageNumberInfo.at(2) * 200 * 0.95 +
+		(totalBooks - calculateTotalPackageBooks(packageNumberInfo)) * 100;
 }
 
-int PotterCart::calculateTotalBooks()
+int PotterCart::calculateTotalBooksInCart()
 {
 	int totalBooks = 0;
 
@@ -76,15 +111,20 @@ int PotterCart::calculateTotalBooks()
 	return totalBooks;
 }
 
-int PotterCart::calculateTotalBooksByAllPackages(int numOfPackage5, int numOfPackage4, int numOfPackage3,
-                                                 int numOfPackage2)
+int PotterCart::calculateTotalPackageBooks(PackageNumberInfo packageNumberInfo)
 {
-	return numOfPackage5 * 5 + numOfPackage4 * 4 + numOfPackage3 * 3 + numOfPackage2 * 2;
+	auto totalBooks = 0;
+	for (const auto& pair : packageNumberInfo)
+	{
+		totalBooks += pair.first * pair.second;
+	}
+
+	return totalBooks;
 }
 
 int PotterCart::GetTotal()
 {
-	int totalBooks = calculateTotalBooks();
+	int totalBooks = calculateTotalBooksInCart();
 
 	int maxNumberOfPackage5 = estimateSpecifiedPackageMaxNumber(5);
 	int maxNumberOfPackage4 = estimateSpecifiedPackageMaxNumber(4);
@@ -92,6 +132,7 @@ int PotterCart::GetTotal()
 	int maxNumberOfPackage2 = estimateSpecifiedPackageMaxNumber(2);
 
 	int lowestPrice = INT_MAX;
+
 	for (int numOfPackage5 = 0; numOfPackage5 <= maxNumberOfPackage5; numOfPackage5++)
 	{
 		for (int numOfPackage4 = 0; numOfPackage4 <= maxNumberOfPackage4; numOfPackage4++)
@@ -100,14 +141,22 @@ int PotterCart::GetTotal()
 			{
 				for (int numOfPackage2 = 0; numOfPackage2 <= maxNumberOfPackage2; numOfPackage2++)
 				{
-					if (calculateTotalBooksByAllPackages(numOfPackage5, numOfPackage4, numOfPackage3, numOfPackage2) <= totalBooks)
+					PackageNumberInfo packageNumberInfo;
+					packageNumberInfo.insert(std::make_pair(5, numOfPackage5));
+					packageNumberInfo.insert(std::make_pair(4, numOfPackage4));
+					packageNumberInfo.insert(std::make_pair(3, numOfPackage3));
+					packageNumberInfo.insert(std::make_pair(2, numOfPackage2));
+					
+					if (calculateTotalPackageBooks(packageNumberInfo) > totalBooks)
+						continue;
+					
+					if (!isValidPackage(packageNumberInfo))
+						continue;
+
+					const int currentPrice = calculateTotalPrice(totalBooks, packageNumberInfo);
+					if (currentPrice < lowestPrice)
 					{
-						const int currentPrice = calculateTotalPrice(totalBooks, numOfPackage5, numOfPackage4, numOfPackage3,
-						                                             numOfPackage2);
-						if (currentPrice < lowestPrice)
-						{
-							lowestPrice = currentPrice;
-						}
+						lowestPrice = currentPrice;
 					}
 				}
 			}
